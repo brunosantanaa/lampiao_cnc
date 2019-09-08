@@ -25,7 +25,6 @@ NIF = $(PREFIX)/chopper_motion.so
 
 TARGET_CFLAGS = $(shell src/detect_target.sh)
 CFLAGS ?= -O2 -Wall -Wextra -Wno-unused-parameter -pedantic
-CFLAGS += $(TARGET_CFLAGS)
 
 # Check that we're on a supported build platform
 ifeq ($(CROSSCOMPILE),)
