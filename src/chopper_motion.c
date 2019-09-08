@@ -40,7 +40,7 @@ int create_structure_motion(
     axis->next = p_new;
 }
 
-int action(Axes * p_root, int * dir){
+int action(Axes * p_root){
   Axes *p;
   Axes *current;
 
