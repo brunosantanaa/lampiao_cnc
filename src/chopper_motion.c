@@ -18,6 +18,73 @@ typedef struct sAxes
     struct sAxes * next;
   } Axes;
 
+int create_structure_motion(
+  Axes * axis, unsigned int * step, 
+  int i, int length, int len_axis, 
+  int dir, int pin_clk, int pin_dir, int ion, int ioff){
+    Axes * p_new;
+
+    p_new = (Axes *) enif_alloc(sizeof(Axes));
+
+    p_new->i = i;
+    p_new->len_axis = len_axis;
+    p_new->pin_clk_axis = pin_clk;
+    p_new->pin_dir_axis = pin_dir;
+    p_new->interval_on = ion;
+    p_new->interval_off = ioff;
+    p_new->dir_axis = dir;
+    p_new->len_steps = length;
+    p_new->steps = step;
+
+    p_new->next = axis->next;
+    axis->next = p_new;
+}
+
+int action(Axes * p_root, int * dir){
+  Axes *p;
+  Axes *current;
+
+  p = p_root->next;
+  current = p;
+  
+  int n_step;
+  int loop = 1;
+  
+  n_step = p->len_steps;
+
+  int * value;
+  int * current_value;
+
+  value = (int *) enif_alloc(p->len_axis*sizeof(int));
+  current_value = (int *) enif_alloc(p->len_axis*sizeof(int));
+
+  for(int i = 0; i < p->len_axis; i++) {value[i] = 0;}
+  
+  for(int i = 0; i < n_step; i++){
+    loop = 1;
+    p = current;
+
+    while (loop){
+      if(p->i == NULL){
+        loop = 0;
+      }
+      if(value[p->i] != p->steps[i]) {
+        //step action
+        //write_gpio(p->pin_dir_axis, p->dir_axis);
+
+        //write_gpio(p->pin_clk_axis, HIGH);
+        usleep(p->interval_on);
+        //write_gpio(p->pin_clk_axis, LOW);
+        usleep(p->interval_off);
+        printf("step axis -> %d; dir -> %d\n", p->i, p->dir_axis);
+      }
+      value[p->i] = p->steps[i];
+      p = p->next;
+    }
+  }
+  return 0;
+}
+
 static ERL_NIF_TERM motion_nif(ErlNifEnv * env, int argc, ERL_NIF_TERM argv []){
   int len_axis, axis_dir, axis_pin_clk, axis_pin_dir, axis_ion, axis_ioff;
   int n_steps = 0;
@@ -107,73 +174,6 @@ static ERL_NIF_TERM motion_nif(ErlNifEnv * env, int argc, ERL_NIF_TERM argv []){
   
 //   return enif_make_atom(env, "ok");
 // }
-
-int create_structure_motion(
-  Axes * axis, unsigned int * step, 
-  int i, int length, int len_axis, 
-  int dir, int pin_clk, int pin_dir, int ion, int ioff){
-    Axes * p_new;
-
-    p_new = (Axes *) enif_alloc(sizeof(Axes));
-
-    p_new->i = i;
-    p_new->len_axis = len_axis;
-    p_new->pin_clk_axis = pin_clk;
-    p_new->pin_dir_axis = pin_dir;
-    p_new->interval_on = ion;
-    p_new->interval_off = ioff;
-    p_new->dir_axis = dir;
-    p_new->len_steps = length;
-    p_new->steps = step;
-
-    p_new->next = axis->next;
-    axis->next = p_new;
-}
-
-int action(Axes * p_root, int * dir){
-  Axes *p;
-  Axes *current;
-
-  p = p_root->next;
-  current = p;
-  
-  int n_step;
-  int loop = 1;
-  
-  n_step = p->len_steps;
-
-  int * value;
-  int * current_value;
-
-  value = (int *) enif_alloc(p->len_axis*sizeof(int));
-  current_value = (int *) enif_alloc(p->len_axis*sizeof(int));
-
-  for(int i = 0; i < p->len_axis; i++) {value[i] = 0;}
-  
-  for(int i = 0; i < n_step; i++){
-    loop = 1;
-    p = current;
-
-    while (loop){
-      if(p->i == NULL){
-        loop = 0;
-      }
-      if(value[p->i] != p->steps[i]) {
-        //step action
-        //write_gpio(p->pin_dir_axis, p->dir_axis);
-
-        //write_gpio(p->pin_clk_axis, HIGH);
-        usleep(p->interval_on);
-        //write_gpio(p->pin_clk_axis, LOW);
-        usleep(p->interval_off);
-        printf("step axis -> %d; dir -> %d\n", p->i, p->dir_axis);
-      }
-      value[p->i] = p->steps[i];
-      p = p->next;
-    }
-  }
-  return 0;
-}
 
 static ErlNifFunc nif_funcs_[] = {
   {"motion", 6, motion_nif, 0},
