@@ -30,7 +30,7 @@ CFLAGS += $(TARGET_CFLAGS)
 # Check that we're on a supported build platform
 ifeq ($(CROSSCOMPILE),)
     # Not crosscompiling.
-    ifeq ($(shell uname -s),Darwin)
+    ifeq ($(shell uname -s), Linux)
         $(warning LamPIao CNC only works on Nerves and Linux.)
         $(warning Compiling a stub NIF for testing.)
         LDFLAGS += -undefined dynamic_lookup -dynamiclib
