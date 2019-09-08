@@ -14,12 +14,12 @@ typedef struct sAxes
     int pin_dir_axis;
     int interval_on;
     int interval_off;
-    unsigned int * steps;
+    int * steps;
     struct sAxes * next;
   } Axes;
 
-int create_structure_motion(
-  Axes * axis, unsigned int * step, 
+void create_structure_motion(
+  Axes * axis, int * step, 
   int i, int length, int len_axis, 
   int dir, int pin_clk, int pin_dir, int ion, int ioff){
     Axes * p_new;
@@ -65,16 +65,16 @@ int action(Axes * p_root){
     p = current;
 
     while (loop){
-      if(p->i == NULL){
+      if(!p->i){
         loop = 0;
       }
       if(value[p->i] != p->steps[i]) {
         //step action
-        //write_gpio(p->pin_dir_axis, p->dir_axis);
+        write_gpio(p->pin_dir_axis, p->dir_axis);
 
-        //write_gpio(p->pin_clk_axis, HIGH);
+        write_gpio(p->pin_clk_axis, HIGH);
         usleep(p->interval_on);
-        //write_gpio(p->pin_clk_axis, LOW);
+        write_gpio(p->pin_clk_axis, LOW);
         usleep(p->interval_off);
         printf("step axis -> %d; dir -> %d\n", p->i, p->dir_axis);
       }
@@ -85,9 +85,10 @@ int action(Axes * p_root){
   return 0;
 }
 
-static ERL_NIF_TERM motion_nif(ErlNifEnv * env, int argc, ERL_NIF_TERM argv []){
-  int len_axis, axis_dir, axis_pin_clk, axis_pin_dir, axis_ion, axis_ioff;
-  int n_steps = 0;
+static ERL_NIF_TERM motion_nif(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv []){
+  unsigned int len_axis;
+  int axis_dir, axis_pin_clk, axis_pin_dir, axis_ion, axis_ioff;
+  unsigned int n_steps = 0;
 
   enif_get_list_length(env, argv[0], &len_axis);
   
@@ -106,7 +107,7 @@ static ERL_NIF_TERM motion_nif(ErlNifEnv * env, int argc, ERL_NIF_TERM argv []){
   enif_get_list_cell(env, argv[0], &hd, &tl);
   enif_get_list_length(env, hd, &n_steps);
 
-  for(int i = 0; i < len_axis; i++)
+  for(unsigned int i = 0; i < len_axis; i++)
   {
     //ERL_NIF_TERM hd, tl;
     enif_get_list_cell(env, axis, &hd, &tl); 
@@ -119,7 +120,7 @@ static ERL_NIF_TERM motion_nif(ErlNifEnv * env, int argc, ERL_NIF_TERM argv []){
     p_steps = (int *) enif_alloc(n_steps*sizeof(int));
 
     ERL_NIF_TERM curr_list_step = hd;
-    for(int j = 0; j < n_steps; j++)
+    for(unsigned int j = 0; j < n_steps; j++)
     {
       ERL_NIF_TERM step_hd, step_tl;
       enif_get_list_cell(env, curr_list_step, &step_hd, &step_tl);
@@ -154,30 +155,34 @@ static ERL_NIF_TERM motion_nif(ErlNifEnv * env, int argc, ERL_NIF_TERM argv []){
 }
 
 
-// static ERL_NIF_TERM init_motor_nif(ErlNifEnv * env, int argc, ERL_NIF_TERM argv[]){
+static ERL_NIF_TERM init_motor_nif(ErlNifEnv * env, int argc, const ERL_NIF_TERM argv[]){
 
-//   unsigned int len_type, n_pins, pin;
+  unsigned int n_pins;
+  int pin;
 
-//   ERL_NIF_TERM hd, tl, list_pin;
+  ERL_NIF_TERM hd, tl, list_pin;
+  ERL_NIF_TERM error_atom = enif_make_atom(env, "error");
+  ERL_NIF_TERM ok_atom = enif_make_atom(env, "ok");
 
-//   list_pin = argv[0];
+  list_pin = argv[0];
 
-//   enif_get_list_length(env, list_pin, &n_pins);
+  enif_get_list_length(env, list_pin, &n_pins);
   
-//   for(int i = 0; i < n_pins; i++) {
-//     enif_get_list_cell(env, list_pin, &hd, &tl);
-//     enif_get_int(env, hd, &pin);
-//     if(export_gpio(pin) != 0) return make_error_tuple(env, "export_pi");
-//     if(direction_gpio(pin, OUTPUT) != 0) return make_error_tuple(env, "direction_pin");
-//     list_pin = tl;
-//   }
+  for(unsigned int i = 0; i < n_pins; i++) {
+    enif_get_list_cell(env, list_pin, &hd, &tl);
+    enif_get_int(env, hd, &pin);
+    if(export_gpio(pin) != 0) return enif_make_tuple2(env, error_atom, enif_make_atom(env, "export_pi"));
+    if(direction_gpio(pin, OUTPUT) != 0) return enif_make_tuple2(env, error_atom,  enif_make_atom(env, "direction_pin"));
+    list_pin = tl;
+  }
   
-//   return enif_make_atom(env, "ok");
-// }
+  return ok_atom;
+}
 
-static ErlNifFunc nif_funcs_[] = {
+static ErlNifFunc nif_funcs[] = 
+{
   {"motion", 6, motion_nif, 0},
-  //{"init_motor", 1, init_motor_nif, 0},
+  {"init_motor", 1, init_motor_nif, 0}
 };
 
-ERL_NIF_INIT(Elixir.LamPIaoCNC.ChopperNif, nif_funcs_, NULL, NULL, NULL, NULL)
+ERL_NIF_INIT(Elixir.LamPIaoCNC.ChopperNif, nif_funcs, NULL, NULL, NULL, NULL)

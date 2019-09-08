@@ -28,10 +28,10 @@ CFLAGS ?= -O2 -Wall -Wextra -Wno-unused-parameter -pedantic
 
 # Check that we're on a supported build platform
 ifeq ($(CROSSCOMPILE),)
-    # Not crosscompiling.
-    ifeq ($(shell uname -s), Linux)
-        $(warning LamPIao CNC only works on Nerves and Linux.)
-        $(warning Compiling a stub NIF for testing.)
+    # Not crosscompiling, so check that we're on Linux.
+    ifneq ($(shell uname -s),Linux)
+        $(warning LamPIaoCNC only works on Nerves and Linux platforms.)
+        $(warning A stub NIF will be compiled for test purposes.)
         LDFLAGS += -undefined dynamic_lookup -dynamiclib
     else
         LDFLAGS += -fPIC -shared
