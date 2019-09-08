@@ -1,0 +1,42 @@
+{
+  "axis": [
+    {
+      "name": "x",
+      "step_mm": 10,
+      "step_pin": 19,
+      "dir_pin": 26,
+      "enable_pin": 13
+    },
+    {
+      "name": "y",
+      "step_mm": 10,
+      "step_pin": 5,
+      "dir_pin": 6,
+      "enable_pin": 12
+    },
+    {
+      "name": "z",
+      "step_mm": 10,
+      "step_pin": 25,
+      "dir_pin": 24,
+      "enable_pin": 7
+    }
+  ],
+  "heatbed": {
+    "temperature": 120,
+    "sense_ch": 0,
+    "thermistor": "100k bed thermistor"
+  },
+  "extruder": [
+    {
+      "name": "e0",
+      "temperature": 150,
+      "sense_ch": 1,
+      "step_mm": 10,
+      "step_pin": 20,
+      "dir_pin": 16,
+      "enable_pin": 21,
+      "thermistor": "100k bed thermistor"
+    }
+  ]
+}
