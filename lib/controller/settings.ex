@@ -9,7 +9,7 @@ defmodule LamPIaoCNC.Settings do
 
   def init(_conf) do
     {:ok, state} =
-      with {:ok, body} <- :lampiao_cnc |> Application.app_dir("assets/settings.json") |> File.read(),
+      with {:ok, body} <- :lampiao_cnc |> Application.app_dir("priv/settings/settings.json") |> File.read(),
            {:ok, conf_json} <- Poison.decode(body),
            do: {:ok, conf_json}
 
