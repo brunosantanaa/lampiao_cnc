@@ -26,7 +26,7 @@ defmodule LamPIaoCNC.MixProject do
     [
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-      {:gcode, path: "../gcode"},
+      {:gcode, github: "brunosantanaa/gcode"},
       {:elixir_make, "~> 0.5", runtime: false},
       {:ex_mcp3xxx, github: "brunosantanaa/ex_mcp3xxx"},
       {:poison, "~> 4.0"}
