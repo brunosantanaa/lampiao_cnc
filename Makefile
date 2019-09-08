@@ -18,12 +18,12 @@
 # LDFLAGS	linker flags for linking all binaries
 # ERL_LDFLAGS	additional linker flags for projects referencing Erlang libraries
 
-PREFIX = $(MIX_COMPILE_PATH)/../priv
-BUILD = $(MIX_COMPILE_PATH)/../obj
+PREFIX = $(MIX_APP_PATH)/priv
+BUILD = $(MIX_APP_PATH)/obj
 
 NIF = $(PREFIX)/chopper_motion.so
 
-TARGET_CFLAGS = $(shell src/detect_target.sh)
+#TARGET_CFLAGS = $(shell src/detect_target.sh)
 CFLAGS ?= -O2 -Wall -Wextra -Wno-unused-parameter -pedantic
 
 # Check that we're on a supported build platform
