@@ -10,6 +10,7 @@ defmodule LamPIaoCNC.MixProject do
       make_targets: ["all"],
       make_clean: ["clean"],
       start_permanent: Mix.env() == :prod,
+      build_embedded: true,
       deps: deps()
     ]
   end
