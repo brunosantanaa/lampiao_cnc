@@ -25,18 +25,22 @@
   "heatbed": {
     "temperature": 120,
     "sense_ch": 0,
-    "thermistor": "100k bed thermistor"
+    "thermistor": "100k bed thermistor",
+    "pin": 27
   },
   "extruder": [
     {
       "name": "e0",
       "temperature": 150,
+      "thermistor": "100k bed thermistor",
+      "hotend": 17,
       "sense_ch": 1,
-      "step_mm": 10,
-      "step_pin": 20,
-      "dir_pin": 16,
-      "enable_pin": 21,
-      "thermistor": "100k bed thermistor"
+      "motor": {
+        "step_mm": 10,
+        "step_pin": 20,
+        "dir_pin": 16,
+        "enable_pin": 21
+      }
     }
   ]
 }

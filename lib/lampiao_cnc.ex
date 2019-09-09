@@ -4,6 +4,7 @@ defmodule LamPIaoCNC do
   """
 
   use Application
+
   @doc """
   Hello world.
 

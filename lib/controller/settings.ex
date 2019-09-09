@@ -9,14 +9,18 @@ defmodule LamPIaoCNC.Settings do
 
   def init(_conf) do
     {:ok, settings} =
-      with {:ok, body} <- :lampiao_cnc |> Application.app_dir("priv/settings/settings.json") |> File.read(),
+      with {:ok, body} <-
+             :lampiao_cnc |> Application.app_dir("priv/settings/machine.json") |> File.read(),
            {:ok, conf_json} <- Poison.decode(body),
            do: {:ok, conf_json}
+
     {:ok, thermistors} =
-           with {:ok, body} <- :lampiao_cnc |> Application.app_dir("priv/settings/thermistors.json") |> File.read(),
-                {:ok, conf_json} <- Poison.decode(body),
-                do: {:ok, conf_json}
-    {:ok, %{settings: settings, thermistors: thermistors}}
+      with {:ok, body} <-
+             :lampiao_cnc |> Application.app_dir("priv/settings/thermistors.json") |> File.read(),
+           {:ok, conf_json} <- Poison.decode(body),
+           do: {:ok, conf_json}
+
+    {:ok, %{machine: settings, thermistors: thermistors}}
   end
 
   def handle_call(:read, _from, state) do

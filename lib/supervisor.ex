@@ -1,5 +1,4 @@
 defmodule LamPIaoCNC.Supervisor do
-  
   use Supervisor
 
   def start_link(opts) do
