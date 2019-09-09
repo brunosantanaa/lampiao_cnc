@@ -1,36 +1,44 @@
 defmodule LamPIaoCNC.Temperature do
   use GenServer
   alias LamPIaoCNC.Settings
+  alias Circuits.GPIO
 
   @time_to_read 10_000
+  @temp_hister 5
 
   def start_link(conf) do
     GenServer.start_link(__MODULE__, conf, name: __MODULE__)
   end
 
-  def att_settings, do: GenServer.cast(__MODULE__, :settings)
-
   def init(_conf) do
     {:ok, _sensor} = ExMCP3xxx.start_link(family: 3202)
 
-    {:ok, state} = get_settings()
+    {:ok, settings} = get_settings()
 
+    {:ok, hotend_pin} = GPIO.open(settings.extruder.hotend_pin, :output)
+    {:ok, heatbed_pin} = GPIO.open(settings.heatbed.pin, :output)
+
+    state = %{pins: %{hotend: hotend_pin, heatbed: heatbed_pin}}
     Process.send_after(__MODULE__, :control, @time_to_read)
     {:ok, state}
   end
 
-  def handle_cast(:settings, _state) do
-    # TODO
-    {:ok, new_state} = get_settings()
-    {:noreply, new_state}
-  end
-
   def handle_info(:control, state) do
-    {:ok, heatbed_r} = ExMCP3xxx.read(state.heatbed["sense_ch"])
-    {:ok, extruder_r} = ExMCP3xxx.read(state.extruder["sense_ch"])
+    {:ok, heatbed, extruder} = get()
 
-    _heatbed_temp = get_temperature(state.heatbed.thermistor, heatbed_r)
-    _extruder_temp = get_temperature(state.extruder.thermistor, extruder_r)
+    {:ok, settings} = get_settings()
+
+    if(heatbed < settings.heatbed.temp + @temp_hister) do
+      GPIO.write(state.pins.heatbed, 1)
+    else
+      GPIO.write(state.pins.heatbed, 0)
+    end
+
+    if(extruder < settings.extruder.temp + @temp_hister) do
+      GPIO.write(state.pins.hotend, 1)
+    else
+      GPIO.write(state.pins.hotend, 0)
+    end
 
     Process.send_after(__MODULE__, :control, @time_to_read)
     {:noreply, state}
@@ -45,24 +53,43 @@ defmodule LamPIaoCNC.Temperature do
     thermistor_extruder = settings.thermistors[extruder["thermistor"]]
     thermistor_heatbed = settings.thermistors[heatbed["thermistor"]]
 
-    pin_extruder = extruder["hotend"]
-    pin_heatbed = heatbed["pin"]
-
     {:ok,
      %{
-       extruder: %{pin: pin_extruder, thermistor: thermistor_extruder},
-       heatbed: %{pin: pin_heatbed, thermistor: thermistor_heatbed}
+       extruder: %{
+         hotend_pin: extruder["hotend"],
+         thermistor: thermistor_extruder,
+         temp: extruder["temperature"],
+         sensor: extruder["sense_ch"]
+       },
+       heatbed: %{
+         pin: heatbed["pin"],
+         thermistor: thermistor_heatbed,
+         temp: heatbed["temperature"],
+         sensor: heatbed["sense_ch"]
+       }
      }}
   end
 
-  defp get_temperature(therm_map, value, max \\ 0, min \\ 0, recur \\ false) do
+  defp get() do
+    {:ok, settings} = get_settings()
+
+    {:ok, heatbed_r} = ExMCP3xxx.read(settings.heatbed.sensor)
+    {:ok, extruder_r} = ExMCP3xxx.read(settings.extruder.sensor)
+
+    heatbed_temp = convert(settings.heatbed.thermistor, heatbed_r)
+    extruder_temp = convert(settings.extruder.thermistor, extruder_r)
+
+    {:ok, heatbed_temp, extruder_temp}
+  end
+
+  defp convert(therm_map, value, max \\ 0, min \\ 0, recur \\ false) do
     case Map.fetch(therm_map, Integer.to_string(value)) do
       {:ok, res} ->
         {:ok, res}
 
       :error ->
         unless recur do
-          get_temperature(therm_map, value, value + 1, value - 1, true)
+          convert(therm_map, value, value + 1, value - 1, true)
         else
           case Map.fetch(therm_map, Integer.to_string(max)) do
             {:ok, n_max} ->
@@ -72,13 +99,13 @@ defmodule LamPIaoCNC.Temperature do
                   {:ok, result}
 
                 :error ->
-                  get_temperature(therm_map, value, max, min - 1, true)
+                  convert(therm_map, value, max, min - 1, true)
               end
 
             :error ->
               case Map.fetch(therm_map, Integer.to_string(min)) do
-                {:ok, _n_min} -> get_temperature(therm_map, value, max + 1, min, true)
-                :error -> get_temperature(therm_map, value, max + 1, min - 1, true)
+                {:ok, _n_min} -> convert(therm_map, value, max + 1, min, true)
+                :error -> convert(therm_map, value, max + 1, min - 1, true)
               end
           end
         end

@@ -31,7 +31,8 @@ defmodule LamPIaoCNC.MixProject do
       {:elixir_make, "~> 0.6", runtime: false},
       {:ex_mcp3xxx, github: "brunosantanaa/ex_mcp3xxx"},
       {:gcode, github: "brunosantanaa/gcode"},
-      {:poison, "~> 4.0"}
+      {:poison, "~> 4.0"},
+      {:circuits_gpio, "~> 0.4.1"}
     ]
   end
 end
