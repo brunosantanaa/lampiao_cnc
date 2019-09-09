@@ -16,7 +16,7 @@ defmodule LamPIaoCNC.Temperature do
     heatbed = machine_settings["heatbed"]
 
     state = %{extruder: extruder, heatbed: heatbed}
-    Process.send_after(__MODULE__, :control, 1_000)
+    Process.send_after(__MODULE__, :control, @time_to_read)
     {:ok, state}
   end
 

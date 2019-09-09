@@ -2,6 +2,8 @@ defmodule LamPIaoCNC.ChopperNif do
   @on_load {:load_nif, 0}
   @compile {:autoload, false}
 
+  @moduledoc false
+
   def load_nif() do
     nif_binary = Application.app_dir(:lampiao_cnc, "priv/chopper_motion")
 
