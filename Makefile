@@ -46,7 +46,8 @@ endif
 ERL_CFLAGS ?= -I$(ERL_EI_INCLUDE_DIR)
 ERL_LDFLAGS ?= -L$(ERL_EI_LIBDIR) -lei
 
-SRC =src/chopper_motion.c
+SYS_SRC ?= src/gpio_sys.c
+SRC = $(SYS_SRC) src/chopper_motion.c
 HEADERS =$(wildcard src/*.h)
 OBJ = $(SRC:src/%.c=$(BUILD)/%.o)
 
