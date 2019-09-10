@@ -10,7 +10,7 @@ defmodule LamPIaoCNC.Temperature do
     GenServer.start_link(__MODULE__, conf, name: __MODULE__)
   end
 
-  def temperature(), do: GenServer.call(__MODULE__, :temp)
+  def temperature(), do: GenServer.call(__MODULE__, :temperature)
 
   def init(_conf) do
     {:ok, _sensor} = ExMCP3xxx.start_link(family: 3202)
@@ -25,7 +25,7 @@ defmodule LamPIaoCNC.Temperature do
     {:ok, state}
   end
 
-  def handle_call(:temp, _from, state) do
+  def handle_call(:temperature, _from, state) do
     {:reply, get(), state}
   end
 
