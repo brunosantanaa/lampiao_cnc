@@ -10,6 +10,8 @@ defmodule LamPIaoCNC.Temperature do
     GenServer.start_link(__MODULE__, conf, name: __MODULE__)
   end
 
+  def temperature(), do: GenServer.call(__MODULE__, :temp)
+
   def init(_conf) do
     {:ok, _sensor} = ExMCP3xxx.start_link(family: 3202)
 
@@ -18,9 +20,13 @@ defmodule LamPIaoCNC.Temperature do
     {:ok, hotend_pin} = GPIO.open(settings.extruder.hotend_pin, :output)
     {:ok, heatbed_pin} = GPIO.open(settings.heatbed.pin, :output)
 
-    state = %{pins: %{hotend: hotend_pin, heatbed: heatbed_pin}}
+    state = %{pid: %{hotend: hotend_pin, heatbed: heatbed_pin}}
     Process.send_after(__MODULE__, :control, @time_to_read)
     {:ok, state}
+  end
+
+  def handle_call(:temp, _from, state) do
+    {:reply, get(), state}
   end
 
   def handle_info(:control, state) do
@@ -28,16 +34,16 @@ defmodule LamPIaoCNC.Temperature do
 
     {:ok, settings} = get_settings()
 
-    if(heatbed < settings.heatbed.temp + @temp_hister) do
-      GPIO.write(state.pins.heatbed, 1)
+    if(heatbed <= settings.heatbed.temp - @temp_hister) do
+      GPIO.write(state.pid.heatbed, 1)
     else
-      GPIO.write(state.pins.heatbed, 0)
+      GPIO.write(state.pid.heatbed, 0)
     end
 
-    if(extruder < settings.extruder.temp + @temp_hister) do
-      GPIO.write(state.pins.hotend, 1)
+    if(extruder <= settings.extruder.temp - @temp_hister) do
+      GPIO.write(state.pid.hotend, 1)
     else
-      GPIO.write(state.pins.hotend, 0)
+      GPIO.write(state.pid.hotend, 0)
     end
 
     Process.send_after(__MODULE__, :control, @time_to_read)
